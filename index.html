@@ -14,7 +14,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <title>Палитра художника</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,400;1,500;1,700&family=Lora:ital,wght@0,400;0,500;1,400&family=Source+Sans+3:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,400;1,500;1,600;1,700&family=Lora:ital,wght@0,400;0,500;1,400&family=Source+Sans+3:wght@400;500;600&display=swap">
 <style>
   /* Стол художника: побелённые доски, белая кювета с акварелью и фарфоровая палитра.
      Один светлый вид намеренно — краски должны читаться на белом, как на бумаге. */
@@ -28,8 +28,8 @@
     --ink:#2B2620;           /* сепийные чернила */
     --muted:#6D655B;
     --accent:#7A3B1E;        /* жжёная сиена — подписи и кнопки */
-    --ok:#3E6B3A;
-    --err:#A3301F;
+    --ok:#14A44D;            /* чистые зелёный и красный — отметки ответа */
+    --err:#E3261B;
     --shadow:0 22px 40px -24px rgba(50,40,30,.55), 0 2px 6px rgba(50,40,30,.12);
     --display:"Playfair Display", "Playfair", Georgia, "Times New Roman", serif;
     --body:"Lora", Georgia, "Times New Roman", serif;
@@ -63,8 +63,9 @@
   .label{font-family:var(--body); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted);}
 
   .top{display:flex; align-items:center; justify-content:space-between; gap:10px;}
-  .back{font:italic 15px var(--display); color:var(--accent); background:var(--porcelain); border:1px solid var(--porcelain-edge);
+  .back{display:inline-flex; align-items:center; gap:6px; font:italic 15px var(--display); color:var(--accent); background:var(--porcelain); border:1px solid var(--porcelain-edge);
     border-radius:999px; padding:5px 14px; cursor:pointer; box-shadow:0 2px 6px rgba(50,40,30,.12);}
+  .back .arr{width:16px; height:10px; flex:none; position:relative; top:.04em;} /* середина строчных букв */
   .tally{font-family:var(--display); font-style:italic; font-size:16px; color:var(--ink); background:var(--porcelain);
     border-radius:999px; padding:5px 14px; box-shadow:0 2px 6px rgba(50,40,30,.12); font-variant-numeric:tabular-nums;}
 
@@ -93,16 +94,23 @@
     box-shadow:var(--shadow); display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px;}
   .pan{position:relative; aspect-ratio:4/3; max-width:100%; border-radius:9px; border:0; padding:0; cursor:pointer;
     background:var(--porcelain); box-shadow:inset 0 3px 7px rgba(50,40,30,.35), 0 1px 0 rgba(255,255,255,.9);}
-  .paint, .pan .paint{position:absolute; inset:6px; border-radius:6px;
+  /* Краска в кювете: ровный цвет, крупные мягкие наплывы и блик, как у свежей
+     краски из тюбика. Положение наплывов у каждой краски своё (--x1…--y3 из ui.js). */
+  .paint, .pan .paint{position:absolute; inset:6px; border-radius:6px; overflow:hidden;
     background:
-      radial-gradient(ellipse 60% 45% at 30% 28%, rgba(255,255,255,.38), transparent 70%),
-      radial-gradient(ellipse 80% 70% at 70% 80%, rgba(0,0,0,.22), transparent 70%),
+      radial-gradient(ellipse 55% 38% at var(--x1, 30%) var(--y1, 25%), rgba(255,255,255,.22), transparent 70%),
+      radial-gradient(ellipse 70% 55% at var(--x2, 70%) var(--y2, 75%), rgba(0,0,0,.26), transparent 70%),
+      radial-gradient(ellipse 45% 35% at var(--x3, 60%) var(--y3, 40%), rgba(255,255,255,.08), transparent 70%),
+      linear-gradient(180deg, rgba(255,255,255,.10), transparent 30%, rgba(0,0,0,.10)),
       var(--c);
-    box-shadow:inset 0 0 0 1px rgba(0,0,0,.12), inset 0 -6px 12px rgba(0,0,0,.15);}
-  .pan .tag{position:absolute; left:8px; right:8px; bottom:8px; font:500 14px/1.2 var(--sans); overflow-wrap:break-word; -webkit-hyphens:auto; hyphens:auto; color:var(--ink);
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.14), inset 0 2px 1px rgba(255,255,255,.25), inset 0 -5px 10px rgba(0,0,0,.18);}
+  /* Лёгкое зерно пигмента поверх цвета */
+  .paint::after{content:""; position:absolute; inset:0; pointer-events:none;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url%28%23g%29'/%3E%3C/svg%3E") 0 0 / 160px 160px; mix-blend-mode:overlay; opacity:.22;}
+  .pan .tag{position:absolute; left:8px; right:8px; bottom:8px; font:500 14px/1.2 var(--sans); -webkit-hyphens:none; hyphens:none; color:var(--ink);
     background:rgba(251,250,247,.92); border-radius:6px; padding:3px 6px; text-align:center;}
-  .pan.right{outline:3px solid var(--ok); outline-offset:2px;}
-  .pan.wrong{outline:3px solid var(--err); outline-offset:2px;}
+  .pan.right{outline:4px solid var(--ok); outline-offset:2px;}
+  .pan.wrong{outline:4px solid var(--err); outline-offset:2px;}
 
   .big{position:relative; height:150px; border-radius:16px; background:var(--porcelain);
     box-shadow:inset 0 4px 10px rgba(50,40,30,.35);}
@@ -113,21 +121,27 @@
 
   /* Варианты-названия: овальные лунки фарфоровой палитры */
   .names{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px;}
-  .name{font:500 17px/1.2 var(--sans); min-width:0; overflow-wrap:break-word; -webkit-hyphens:auto; hyphens:auto; color:var(--ink); background:var(--porcelain); cursor:pointer;
+  .name{font:500 17px/1.2 var(--sans); min-width:0; -webkit-hyphens:none; hyphens:none; color:var(--ink); background:var(--porcelain); cursor:pointer;
     border:1px solid var(--porcelain-edge); border-radius:28px; padding:12px 12px; min-height:56px;
-    box-shadow:inset 0 3px 6px rgba(60,50,40,.14); display:flex; align-items:center; justify-content:center; gap:8px; text-align:center;}
+    box-shadow:inset 0 3px 6px rgba(60,50,40,.14); display:flex; align-items:center; justify-content:flex-start; gap:10px; text-align:left;}
+  .name .nm{flex:1; min-width:0;}
+  .nb{white-space:nowrap;}
   .name:hover{border-color:var(--accent);}
-  .name .dot{flex:none; width:18px; height:18px; border-radius:50%; background:var(--c); box-shadow:inset 0 0 0 1px rgba(0,0,0,.15);}
+  /* Лунка под цвет: место занято всегда, чтобы текст не прыгал и кружки стояли в одну линию */
+  .name .dot{flex:none; width:26px; height:26px; border-radius:50%; background:transparent; box-shadow:inset 0 2px 4px rgba(60,50,40,.18);}
+  .name .dot.shown{background:var(--c); box-shadow:inset 0 0 0 1px rgba(0,0,0,.15);}
   .name.on{background:#F1E6DA; border-color:var(--accent); box-shadow:inset 0 0 0 2px var(--accent);}
-  .name.right{border-color:var(--ok); box-shadow:inset 0 0 0 2px var(--ok);}
-  .name.wrong{border-color:var(--err); box-shadow:inset 0 0 0 2px var(--err);}
-  .name.missed{border-color:var(--ok); border-style:dashed; box-shadow:none;}
+  .name.right{border-color:var(--ok); box-shadow:inset 0 0 0 3px var(--ok);}
+  .name.wrong{border-color:var(--err); box-shadow:inset 0 0 0 3px var(--err);}
+  .name.missed{border:3px dashed var(--ok); box-shadow:none;}
 
-  .verdict{min-height:1.5em; text-align:center; font:italic 18px/1.4 var(--display); margin:0;}
-  .verdict.ok{color:var(--ok);} .verdict.bad{color:var(--err);}
+  /* Строка ответа: гротеск, чёрный; названия красок — Playfair italic полужирный */
+  .verdict{min-height:1.5em; text-align:center; font:18px/1.45 var(--sans); color:#000; margin:0; -webkit-hyphens:none; hyphens:none; text-wrap:balance;}
+  .verdict b{font-weight:600;}
+  .verdict .pn{font:italic 600 1em/1.3 var(--display);} /* тот же кегль, что у гротеска */
 
   .btn{font:italic 500 20px var(--display); color:var(--porcelain); background:var(--accent); border:0; border-radius:999px;
-    padding:12px 26px; cursor:pointer; align-self:center; box-shadow:0 8px 18px -10px rgba(80,40,20,.8);}
+    padding:12px 26px; cursor:pointer; align-self:center; box-shadow:none;}
   .btn[disabled]{opacity:.45; cursor:default;}
   .btn.ghost{background:transparent; color:var(--accent); border:1px solid var(--accent); box-shadow:none;}
 
@@ -148,6 +162,7 @@
   .note{font-size:14px; color:var(--muted); margin:0;}
 
   button:focus-visible{outline:2px solid var(--accent); outline-offset:3px;}
+  .btn:focus{outline:none;}
   @media (max-width:420px){ h1{font-size:38px;} .ask{font-size:26px;} .name{font-size:16px; padding:10px 10px;} }
   @media (prefers-reduced-motion:no-preference){ .pan,.name,.mitem{transition:transform .12s ease, border-color .12s ease;} .pan:active,.name:active{transform:scale(.97);} }
 </style>
@@ -159,7 +174,7 @@
 // (src — название статьи). Цвет на экране приблизительный: у настоящей
 // краски тон зависит от производителя и разбавления.
 // fam — семья оттенков для третьего раунда.
-// \u00AD — мягкий перенос: длинные слова не влезают в кнопку на телефоне.
+//  — мягкий перенос: длинные слова не влезают в кнопку на телефоне.
 const FAMILIES = {
   red:    {name: 'красного',          title: 'Красные'},
   yellow: {name: 'жёлтого и оранжевого', title: 'Жёлтые и оранжевые'},
@@ -190,14 +205,14 @@ const PAINTS = [
   {name: 'Краплак',               hex: 'E32636', fam: 'red',    src: 'Rose madder'},
   {name: 'Ализарин',              hex: 'DB2D43', fam: 'red',    src: 'Alizarin (List of colors)'},
   {name: 'Кадмий красный',        hex: 'E30022', fam: 'red',    src: 'Cadmium pigments'},
-  {name: 'Венеци\u00ADанская красная',  hex: 'C80815', fam: 'red',    src: 'Venetian red'},
+  {name: 'Венецианская красная',  hex: 'C80815', fam: 'red',    src: 'Venetian red'},
   {name: 'Красная охра',          hex: '913831', fam: 'red',    src: 'Red ochre'},
   {name: 'Индийская красная',     hex: 'CD5C5C', fam: 'red',    src: 'Indian red (color)'},
   // Жёлтые и оранжевые
   {name: 'Кадмий жёлтый',         hex: 'FFF600', fam: 'yellow', src: 'Cadmium pigments'},
   {name: 'Кадмий оранжевый',      hex: 'ED872D', fam: 'yellow', src: 'Cadmium pigments'},
   {name: 'Лимонная жёлтая',       hex: 'FFF44F', fam: 'yellow', src: 'Lemon (color)#Lemon yellow'},
-  {name: 'Неаполи\u00ADтанская жёлтая', hex: 'FADA5E', fam: 'yellow', src: 'Naples yellow'},
+  {name: 'Неаполитанская жёлтая', hex: 'FADA5E', fam: 'yellow', src: 'Naples yellow'},
   {name: 'Индийская жёлтая',      hex: 'E3A857', fam: 'yellow', src: 'Indian yellow'},
   {name: 'Гуммигут',              hex: 'E49B0F', fam: 'yellow', src: 'Gamboge'},
   {name: 'Охра',                  hex: 'CC7722', fam: 'yellow', src: 'Ochre'},
@@ -207,14 +222,14 @@ const PAINTS = [
   {name: 'Умбра жжёная',          hex: '8A3324', fam: 'brown',  src: 'Burnt umber'},
   {name: 'Сиена натуральная',     hex: 'D68A59', fam: 'brown',  src: 'Raw sienna (List of colors)'},
   {name: 'Сиена жжёная',          hex: 'E97451', fam: 'brown',  src: 'Burnt sienna'},
-  {name: 'Ван-Дик коричневый',    hex: '664228', fam: 'brown',  src: 'Van Dyke brown'},
+  {name: 'Ван-Дик коричневый',    hex: '664228', fam: 'brown',  src: 'Van Dyke brown', proper: true},
   {name: 'Бистр',                 hex: '3D2B1F', fam: 'brown',  src: 'Bistre'},
   // Зелёные
   {name: 'Виридиан',              hex: '40826D', fam: 'green',  src: 'Viridian'},
   {name: 'Парижская зелень',      hex: '50C878', fam: 'green',  src: 'Paris green'},
   {name: 'Сап-грин',              hex: '507D2A', fam: 'green',  src: 'Shades of green#Sap green'},
   {name: 'Зелёная Хукера',        hex: '49796B', fam: 'green',  src: "Shades of green#Hooker's green"},
-  {name: 'Фтало\u00ADциани\u00ADновая зелёная', hex: '123524', fam: 'green', src: 'Phthalocyanine Green G'},
+  {name: 'Фталоцианиновая зелёная', hex: '123524', fam: 'green', src: 'Phthalocyanine Green G'},
   {name: 'Кадмий зелёный',        hex: '006B3C', fam: 'green',  src: 'Cadmium pigments'},
   {name: 'Ярь-медянка',           hex: '43B3AE', fam: 'green',  src: 'Verdigris'},
   {name: 'Малахитовая зелень',    hex: '0BDA51', fam: 'green',  src: 'Shades of green#Malachite'},
@@ -224,7 +239,7 @@ const PAINTS = [
   {name: 'Церулеум',              hex: '007BA7', fam: 'blue',   src: 'Cerulean'},
   {name: 'Берлинская лазурь',     hex: '003153', fam: 'blue',   src: 'Prussian blue'},
   {name: 'Индиго',                hex: '00416A', fam: 'blue',   src: 'Indigo (color)#Indigo dye'},
-  {name: 'Фтало\u00ADциани\u00ADновая синяя', hex: '000F89', fam: 'blue',   src: 'Phthalocyanine Blue BN'},
+  {name: 'Фталоцианиновая синяя', hex: '000F89', fam: 'blue',   src: 'Phthalocyanine Blue BN'},
   {name: 'Ляпис-лазурь',          hex: '26619C', fam: 'blue',   src: 'Shades of azure#Lapis lazuli'},
   // Пурпурные
   {name: 'Пурпур',                hex: '66023C', fam: 'purple', src: 'Tyrian purple'},
@@ -331,7 +346,32 @@ const ROUNDS = [
 const ROUND_WELLS = ['E34234', '003153', '40826D']; // киноварь, берлинская лазурь, виридиан
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
-const paint = hex => `<i class="paint" style="--c:#${hex}"></i>`;
+// Наплывы краски у каждой кюветы лежат по-своему: позиции берём из её цвета.
+const paint = hex => {
+  const n = parseInt(hex, 16);
+  const at = (k, lo, span) => lo + ((n >> k) * 7919 % span);
+  return `<i class="paint" style="--c:#${hex};--x1:${at(0, 15, 35)}%;--y1:${at(3, 12, 30)}%;--x2:${at(6, 50, 40)}%;--y2:${at(9, 60, 35)}%;--x3:${at(12, 35, 45)}%;--y3:${at(15, 30, 35)}%"></i>`;
+};
+// Слова через дефис (ляпис-лазурь, Ван-Дик) не разрываем по дефису.
+const nameHTML = s => esc(s).replace(/\S+-\S+/g, w => `<span class="nb">${w}</span>`);
+
+// Название краски в строке ответа: со строчной, кроме начинающихся с фамилии.
+const pn = p => `<span class="pn">${nameHTML(p.proper ? p.name : p.name[0].toLowerCase() + p.name.slice(1))}</span>`;
+
+// Длинное слово целиком: если не влезает в кнопку, уменьшаем кегль.
+function fitText(root) {
+  root.querySelectorAll('.name, .tag, .ask').forEach(el => {
+    el.style.fontSize = '';
+    const box = el.querySelector('.nm') || el; // в кнопке меряем сам текст, без кружка
+    let s = parseFloat(getComputedStyle(el).fontSize);
+    while (box.scrollWidth > box.clientWidth + 1 && s > 11) {
+      s -= 0.5;
+      el.style.fontSize = s + 'px';
+    }
+  });
+}
+// Шрифты догружаются позже первого рисования и шире запасных — подгоняем ещё раз.
+if (document.fonts) document.fonts.addEventListener('loadingdone', () => fitText(app));
 
 let state = null;
 
@@ -424,7 +464,7 @@ function header() {
     ? `<div class="road">${Array.from({length: r.count}, (_, i) =>
         `<i class="${i < state.marks.length ? (state.marks[i] ? 'done' : 'miss') : ''}"></i>`).join('')}</div>`
     : '';
-  return `<div class="top"><button class="back" id="back">← В меню</button><span class="tally">${tally}</span></div>${road}`;
+  return `<div class="top"><button class="back" id="back"><svg class="arr" viewBox="0 0 16 10" aria-hidden="true"><path d="M15 5H2M5.5 1.5 2 5l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>В меню</button><span class="tally">${tally}</span></div>${road}`;
 }
 
 function play() {
@@ -435,6 +475,7 @@ function play() {
   else if (task.kind === 'byColor') renderByColor(task);
   else renderFamily(task);
   app.querySelector('#back').onclick = menu;
+  fitText(app);
 }
 
 function shell(inner) {
@@ -446,7 +487,7 @@ function shell(inner) {
 
 /* Раунд 1: название → краска */
 function renderByName(t) {
-  shell(`<p class="ask"><small>Найди в кювете</small>${esc(t.target.name)}</p>
+  shell(`<p class="ask"><small>Найди в кювете</small>${nameHTML(t.target.name)}</p>
     <div class="tray">${t.options.map((p, i) =>
       `<button class="pan" data-i="${i}" aria-label="Вариант ${i + 1}">${paint(p.hex)}</button>`).join('')}</div>`);
   app.querySelectorAll('.pan').forEach(b => b.onclick = () => {
@@ -455,11 +496,11 @@ function renderByName(t) {
     const ok = pick === t.target;
     app.querySelectorAll('.pan').forEach((el, i) => {
       const p = t.options[i];
-      el.insertAdjacentHTML('beforeend', `<span class="tag">${esc(p.name)}</span>`);
+      el.insertAdjacentHTML('beforeend', `<span class="tag">${nameHTML(p.name)}</span>`);
       if (p === t.target) el.classList.add('right');
       else if (el === b) el.classList.add('wrong');
     });
-    finish(ok, ok ? 'Верно!' : `Это ${pick.name}. А ${t.target.name} — в зелёной рамке.`);
+    finish(ok, ok ? 'Верно!' : `Это ${pn(pick)}. А ${pn(t.target)} — в зелёной рамке.`);
   });
 }
 
@@ -468,27 +509,27 @@ function renderByColor(t) {
   shell(`<p class="ask"><small>Как называется эта краска?</small></p>
     <div class="big">${paint(t.target.hex)}</div>
     <div class="names">${t.options.map((p, i) =>
-      `<button class="name" data-i="${i}">${esc(p.name)}</button>`).join('')}</div>`);
+      `<button class="name" data-i="${i}"><span class="dot"></span><span class="nm">${nameHTML(p.name)}</span></button>`).join('')}</div>`);
   app.querySelectorAll('.name').forEach(b => b.onclick = () => {
     if (state.answered) return;
     const pick = t.options[+b.dataset.i];
     const ok = pick === t.target;
     app.querySelectorAll('.name').forEach((el, i) => {
       const p = t.options[i];
-      el.insertAdjacentHTML('afterbegin', `<span class="dot" style="--c:#${p.hex}"></span>`);
+      showDot(el, p);
       if (p === t.target) el.classList.add('right');
       else if (el === b) el.classList.add('wrong');
     });
-    finish(ok, ok ? 'Верно!' : `Это ${t.target.name}.`);
+    finish(ok, ok ? 'Верно!' : `Это ${pn(t.target)}.`);
   });
 }
 
 /* Раунд 3: отметить всю семью */
 function renderFamily(t) {
   const f = FAMILIES[t.fam];
-  shell(`<p class="ask"><small>Отметь все оттенки ${f.name}</small>Какие из них — ${f.title.toLowerCase()}?</p>
+  shell(`<p class="ask"><small>Отметь все оттенки ${f.name}</small><span class="nb">Какие из них —</span><br>${f.title.toLowerCase()}?</p>
     <div class="names">${t.options.map((p, i) =>
-      `<button class="name" data-i="${i}" aria-pressed="false">${esc(p.name)}</button>`).join('')}</div>
+      `<button class="name" data-i="${i}" aria-pressed="false"><span class="dot"></span><span class="nm">${nameHTML(p.name)}</span></button>`).join('')}</div>
     <button class="btn ghost" id="check" disabled>Проверить</button>`);
   const picked = new Set();
   const check = app.querySelector('#check');
@@ -507,20 +548,26 @@ function renderFamily(t) {
       const p = t.options[i];
       const isRight = t.right.includes(p);
       el.classList.remove('on');
-      el.insertAdjacentHTML('afterbegin', `<span class="dot" style="--c:#${p.hex}"></span>`);
+      showDot(el, p);
       if (isRight && picked.has(i)) el.classList.add('right');
       else if (isRight) { el.classList.add('missed'); ok = false; }
       else if (picked.has(i)) { el.classList.add('wrong'); ok = false; }
     });
     check.hidden = true;
-    finish(ok, ok ? 'Все нашлись!' : `${f.title}: ${t.right.map(p => p.name).join(', ')}.`);
+    finish(ok, ok ? 'Все нашлись!' : `<b>${f.title}:</b> ${t.right.map(pn).join(', ')}.`);
   };
+}
+
+function showDot(el, p) {
+  const d = el.querySelector('.dot');
+  d.style.setProperty('--c', '#' + p.hex);
+  d.classList.add('shown');
 }
 
 function finish(ok, text) {
   state.answered = true;
   const v = app.querySelector('#verdict');
-  v.textContent = text;
+  v.innerHTML = text; // названия уже экранированы в pn()
   v.className = 'verdict ' + (ok ? 'ok' : 'bad');
   if (state.mode === 'quest') {
     state.marks.push(ok);
@@ -531,9 +578,9 @@ function finish(ok, text) {
     if (ok) state.right++;
     app.querySelector('.tally').textContent = `${state.right} из ${state.total}`;
   }
+  fitText(app);
   const next = app.querySelector('#next');
   next.hidden = false;
-  next.focus({preventScroll: true});
 }
 
 function advance() {
@@ -581,7 +628,7 @@ function final() {
 function chart() {
   state = null;
   const fams = Object.keys(FAMILIES);
-  app.innerHTML = `<div class="top"><button class="back" id="back">← В меню</button><span class="tally">${PAINTS.length} красок</span></div>
+  app.innerHTML = `<div class="top"><button class="back" id="back"><svg class="arr" viewBox="0 0 16 10" aria-hidden="true"><path d="M15 5H2M5.5 1.5 2 5l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>В меню</button><span class="tally">${PAINTS.length} красок</span></div>
     <section class="palette">
       <h2>Все краски</h2>
       ${fams.map(f => `<div class="fam"><h3>${FAMILIES[f].title}</h3><div class="chart">
