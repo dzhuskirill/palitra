@@ -1,0 +1,540 @@
+<title>Палитра художника</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,400;1,500;1,700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap">
+<style>
+  /* Стол художника: побелённые доски, белая кювета с акварелью и фарфоровая палитра.
+     Один светлый вид намеренно — краски должны читаться на белом, как на бумаге. */
+  :root{
+    color-scheme: light;
+    --wood:#DCDAD3;          /* побелка на досках */
+    --wood-seam:#A9A39A;     /* щель между досками */
+    --wood-grain:rgba(110,100,88,.10);
+    --porcelain:#FBFAF7;     /* фарфор палитры и эмаль кюветы */
+    --porcelain-edge:#E6E2DA;
+    --ink:#2B2620;           /* сепийные чернила */
+    --muted:#6D655B;
+    --accent:#7A3B1E;        /* жжёная сиена — подписи и кнопки */
+    --ok:#3E6B3A;
+    --err:#A3301F;
+    --shadow:0 22px 40px -24px rgba(50,40,30,.55), 0 2px 6px rgba(50,40,30,.12);
+    --display:"Playfair Display", "Playfair", Georgia, "Times New Roman", serif;
+    --body:"Lora", Georgia, "Times New Roman", serif;
+  }
+  html,body{min-height:100%;}
+  body{
+    color:var(--ink);
+    font-family:var(--body);
+    font-size:17px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    background:
+      repeating-linear-gradient(to bottom, transparent 0 118px, var(--wood-seam) 118px 120px),
+      repeating-linear-gradient(97deg, var(--wood-grain) 0 1px, transparent 1px 7px, var(--wood-grain) 7px 8px, transparent 8px 23px),
+      repeating-linear-gradient(88deg, transparent 0 40px, rgba(255,255,255,.35) 40px 70px, transparent 70px 130px),
+      var(--wood);
+  }
+  .wrap{max-width:560px; margin:0 auto; padding-block:22px 48px;
+    padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px));
+    display:flex; flex-direction:column; gap:18px;}
+
+  /* Фарфоровая палитра — основная поверхность. Отверстие для пальца в углу. */
+  .palette{position:relative; background:var(--porcelain); border-radius:44px 56px 48px 40px / 40px 48px 56px 46px;
+    box-shadow:var(--shadow); padding:22px 22px 26px; display:flex; flex-direction:column; gap:16px;}
+  .palette::after{content:""; position:absolute; right:22px; top:22px; width:34px; height:28px; border-radius:50%;
+    background:var(--wood); box-shadow:inset 0 3px 6px rgba(60,50,40,.35);}
+
+  h1,h2,.display{font-family:var(--display); font-style:italic; font-weight:500; text-wrap:balance; margin:0;}
+  h1{font-size:44px; line-height:1.05; letter-spacing:-.01em;}
+  h2{font-size:28px; line-height:1.15;}
+  .lede{margin:0; color:var(--muted); font-style:italic; max-width:40ch;}
+  .label{font-family:var(--body); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted);}
+
+  .top{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .back{font:italic 15px var(--display); color:var(--accent); background:var(--porcelain); border:1px solid var(--porcelain-edge);
+    border-radius:999px; padding:5px 14px; cursor:pointer; box-shadow:0 2px 6px rgba(50,40,30,.12);}
+  .tally{font-family:var(--display); font-style:italic; font-size:16px; color:var(--ink); background:var(--porcelain);
+    border-radius:999px; padding:5px 14px; box-shadow:0 2px 6px rgba(50,40,30,.12); font-variant-numeric:tabular-nums;}
+
+  /* Мазки-кнопки меню */
+  .menu{display:flex; flex-direction:column; gap:12px;}
+  .mitem{display:flex; align-items:center; gap:14px; text-align:left; width:100%; cursor:pointer;
+    background:var(--porcelain); border:1px solid var(--porcelain-edge); border-radius:22px; padding:12px 16px; color:var(--ink); font:inherit;}
+  .mitem:hover{border-color:var(--accent);}
+  .mitem .well{flex:none; width:46px; height:46px; border-radius:50%;}
+  .mitem b{display:block; font:italic 500 22px/1.2 var(--display);}
+  .mitem span{display:block; color:var(--muted); font-size:15px;}
+
+  /* Лунка палитры: белая чашечка с лужицей краски */
+  .well{background:var(--porcelain); box-shadow:inset 0 4px 8px rgba(60,50,40,.22), inset 0 -2px 3px rgba(255,255,255,.9);
+    position:relative; overflow:hidden;}
+  .well i{position:absolute; inset:5px; border-radius:50%;}
+
+  /* Кювета с акварелью: белый эмалированный лоток и прямоугольные кюветы */
+  .tray{background:var(--porcelain); border:1px solid var(--porcelain-edge); border-radius:14px; padding:10px;
+    box-shadow:var(--shadow); display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .pan{position:relative; aspect-ratio:4/3; max-width:100%; border-radius:9px; border:0; padding:0; cursor:pointer;
+    background:var(--porcelain); box-shadow:inset 0 3px 7px rgba(50,40,30,.35), 0 1px 0 rgba(255,255,255,.9);}
+  .paint, .pan .paint{position:absolute; inset:6px; border-radius:6px;
+    background:
+      radial-gradient(ellipse 60% 45% at 30% 28%, rgba(255,255,255,.38), transparent 70%),
+      radial-gradient(ellipse 80% 70% at 70% 80%, rgba(0,0,0,.22), transparent 70%),
+      var(--c);
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.12), inset 0 -6px 12px rgba(0,0,0,.15);}
+  .pan .tag{position:absolute; left:8px; right:8px; bottom:8px; font:italic 15px/1.2 var(--display); color:var(--ink);
+    background:rgba(251,250,247,.92); border-radius:6px; padding:3px 6px; text-align:center;}
+  .pan.right{outline:3px solid var(--ok); outline-offset:2px;}
+  .pan.wrong{outline:3px solid var(--err); outline-offset:2px;}
+
+  .big{position:relative; height:150px; border-radius:16px; background:var(--porcelain);
+    box-shadow:inset 0 4px 10px rgba(50,40,30,.35);}
+  .big .paint{inset:10px; border-radius:11px;}
+
+  .ask{font:italic 500 30px/1.15 var(--display); text-align:center; margin:4px 0 0; text-wrap:balance;}
+  .ask small{display:block; font:15px/1.4 var(--body); font-style:normal; color:var(--muted); margin-bottom:4px;}
+
+  /* Варианты-названия: овальные лунки фарфоровой палитры */
+  .names{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .name{font:italic 500 18px/1.2 var(--display); color:var(--ink); background:var(--porcelain); cursor:pointer;
+    border:1px solid var(--porcelain-edge); border-radius:999px; padding:13px 12px; min-height:56px;
+    box-shadow:inset 0 3px 6px rgba(60,50,40,.14); display:flex; align-items:center; justify-content:center; gap:8px; text-align:center;}
+  .name:hover{border-color:var(--accent);}
+  .name .dot{flex:none; width:18px; height:18px; border-radius:50%; background:var(--c); box-shadow:inset 0 0 0 1px rgba(0,0,0,.15);}
+  .name.on{background:#F1E6DA; border-color:var(--accent); box-shadow:inset 0 0 0 2px var(--accent);}
+  .name.right{border-color:var(--ok); box-shadow:inset 0 0 0 2px var(--ok);}
+  .name.wrong{border-color:var(--err); box-shadow:inset 0 0 0 2px var(--err);}
+  .name.missed{border-color:var(--ok); border-style:dashed; box-shadow:none;}
+
+  .verdict{min-height:1.5em; text-align:center; font:italic 18px/1.4 var(--display); margin:0;}
+  .verdict.ok{color:var(--ok);} .verdict.bad{color:var(--err);}
+
+  .btn{font:italic 500 20px var(--display); color:var(--porcelain); background:var(--accent); border:0; border-radius:999px;
+    padding:12px 26px; cursor:pointer; align-self:center; box-shadow:0 8px 18px -10px rgba(80,40,20,.8);}
+  .btn[disabled]{opacity:.45; cursor:default;}
+  .btn.ghost{background:transparent; color:var(--accent); border:1px solid var(--accent); box-shadow:none;}
+
+  .road{display:flex; gap:6px;}
+  .road i{flex:1; height:6px; border-radius:3px; background:var(--porcelain-edge);}
+  .road i.done{background:var(--accent);} .road i.miss{background:#CDB9A9;}
+
+  .result{display:grid; gap:8px;}
+  .result div{display:flex; justify-content:space-between; gap:10px; font:italic 19px var(--display); border-bottom:1px dotted var(--porcelain-edge); padding-bottom:6px;}
+  .result b{font-variant-numeric:tabular-nums;}
+
+  /* Справочник: все краски по семьям */
+  .fam h3{font:italic 500 21px var(--display); margin:6px 0 8px;}
+  .chart{display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px;}
+  .chip{display:flex; flex-direction:column; gap:6px;}
+  .chip .pan{cursor:default; aspect-ratio:3/2;}
+  .chip span{font:italic 16px/1.2 var(--display);}
+  .note{font-size:14px; color:var(--muted); margin:0;}
+
+  button:focus-visible{outline:2px solid var(--accent); outline-offset:3px;}
+  @media (max-width:420px){ h1{font-size:38px;} .ask{font-size:26px;} .name{font-size:17px;} }
+  @media (prefers-reduced-motion:no-preference){ .pan,.name,.mitem{transition:transform .12s ease, border-color .12s ease;} .pan:active,.name:active{transform:scale(.97);} }
+</style>
+
+<div class="wrap" id="app"></div>
+<script>
+// Краски для игры «Палитра». Оттенки — из английской Википедии:
+// списки «List of colors: A–F / G–M / N–Z» и статьи о самих цветах
+// (src — название статьи). Цвет на экране приблизительный: у настоящей
+// краски тон зависит от производителя и разбавления.
+// fam — семья оттенков для третьего раунда.
+const FAMILIES = {
+  red:    {name: 'красного',          title: 'Красные'},
+  yellow: {name: 'жёлтого и оранжевого', title: 'Жёлтые и оранжевые'},
+  brown:  {name: 'коричневого',       title: 'Коричневые'},
+  green:  {name: 'зелёного',          title: 'Зелёные'},
+  blue:   {name: 'синего',            title: 'Синие'},
+  purple: {name: 'пурпурного',        title: 'Пурпурные'},
+  grey:   {name: 'серого',            title: 'Серые'},
+};
+
+// Соседние семьи легко спутать, поэтому в третьем раунде они не идут
+// «лишними» друг к другу. Серые не загадываются, а у кого в соседях
+// серые — тем их и не подкладываем.
+const NEIGHBOURS = {
+  red:    ['yellow', 'brown', 'purple'],
+  yellow: ['red', 'brown', 'green'],
+  brown:  ['red', 'yellow', 'grey'],
+  green:  ['yellow', 'blue', 'grey'],
+  blue:   ['green', 'purple', 'grey'],
+  purple: ['red', 'blue'],
+  grey:   ['brown', 'green', 'blue'],
+};
+
+const PAINTS = [
+  // Красные
+  {name: 'Киноварь',              hex: 'E34234', fam: 'red',    src: 'Vermilion'},
+  {name: 'Кармин',                hex: '960018', fam: 'red',    src: 'Carmine (color)'},
+  {name: 'Краплак',               hex: 'E32636', fam: 'red',    src: 'Rose madder'},
+  {name: 'Ализарин',              hex: 'DB2D43', fam: 'red',    src: 'Alizarin (List of colors)'},
+  {name: 'Кадмий красный',        hex: 'E30022', fam: 'red',    src: 'Cadmium pigments'},
+  {name: 'Венецианская красная',  hex: 'C80815', fam: 'red',    src: 'Venetian red'},
+  {name: 'Красная охра',          hex: '913831', fam: 'red',    src: 'Red ochre'},
+  {name: 'Индийская красная',     hex: 'CD5C5C', fam: 'red',    src: 'Indian red (color)'},
+  // Жёлтые и оранжевые
+  {name: 'Кадмий жёлтый',         hex: 'FFF600', fam: 'yellow', src: 'Cadmium pigments'},
+  {name: 'Кадмий оранжевый',      hex: 'ED872D', fam: 'yellow', src: 'Cadmium pigments'},
+  {name: 'Лимонная жёлтая',       hex: 'FFF44F', fam: 'yellow', src: 'Lemon (color)#Lemon yellow'},
+  {name: 'Неаполитанская жёлтая', hex: 'FADA5E', fam: 'yellow', src: 'Naples yellow'},
+  {name: 'Индийская жёлтая',      hex: 'E3A857', fam: 'yellow', src: 'Indian yellow'},
+  {name: 'Гуммигут',              hex: 'E49B0F', fam: 'yellow', src: 'Gamboge'},
+  {name: 'Охра',                  hex: 'CC7722', fam: 'yellow', src: 'Ochre'},
+  // Коричневые
+  {name: 'Сепия',                 hex: '704214', fam: 'brown',  src: 'Sepia (color)'},
+  {name: 'Умбра натуральная',     hex: '826644', fam: 'brown',  src: 'Umber#Raw umber'},
+  {name: 'Умбра жжёная',          hex: '8A3324', fam: 'brown',  src: 'Burnt umber'},
+  {name: 'Сиена натуральная',     hex: 'D68A59', fam: 'brown',  src: 'Raw sienna (List of colors)'},
+  {name: 'Сиена жжёная',          hex: 'E97451', fam: 'brown',  src: 'Burnt sienna'},
+  {name: 'Ван-Дик коричневый',    hex: '664228', fam: 'brown',  src: 'Van Dyke brown'},
+  {name: 'Бистр',                 hex: '3D2B1F', fam: 'brown',  src: 'Bistre'},
+  // Зелёные
+  {name: 'Виридиан',              hex: '40826D', fam: 'green',  src: 'Viridian'},
+  {name: 'Парижская зелень',      hex: '50C878', fam: 'green',  src: 'Paris green'},
+  {name: 'Сап-грин',              hex: '507D2A', fam: 'green',  src: 'Shades of green#Sap green'},
+  {name: 'Зелёная Хукера',        hex: '49796B', fam: 'green',  src: "Shades of green#Hooker's green"},
+  {name: 'Фталоцианиновая зелёная', hex: '123524', fam: 'green', src: 'Phthalocyanine Green G'},
+  {name: 'Кадмий зелёный',        hex: '006B3C', fam: 'green',  src: 'Cadmium pigments'},
+  {name: 'Ярь-медянка',           hex: '43B3AE', fam: 'green',  src: 'Verdigris'},
+  {name: 'Малахитовая зелень',    hex: '0BDA51', fam: 'green',  src: 'Shades of green#Malachite'},
+  // Синие
+  {name: 'Ультрамарин',           hex: '120A8F', fam: 'blue',   src: 'Ultramarine'},
+  {name: 'Кобальт синий',         hex: '0047AB', fam: 'blue',   src: 'Cobalt blue'},
+  {name: 'Церулеум',              hex: '007BA7', fam: 'blue',   src: 'Cerulean'},
+  {name: 'Берлинская лазурь',     hex: '003153', fam: 'blue',   src: 'Prussian blue'},
+  {name: 'Индиго',                hex: '00416A', fam: 'blue',   src: 'Indigo (color)#Indigo dye'},
+  {name: 'Фталоцианиновая синяя', hex: '000F89', fam: 'blue',   src: 'Phthalocyanine Blue BN'},
+  {name: 'Ляпис-лазурь',          hex: '26619C', fam: 'blue',   src: 'Shades of azure#Lapis lazuli'},
+  // Пурпурные
+  {name: 'Пурпур',                hex: '66023C', fam: 'purple', src: 'Tyrian purple'},
+  {name: 'Хинакридон пурпурный',  hex: '8E3A59', fam: 'purple', src: 'Shades of magenta#Quinacridone magenta'},
+  // Серые
+  {name: 'Серая Пейна',           hex: '536878', fam: 'grey',   src: "Payne's grey"},
+  {name: 'Серая Дэви',            hex: '555555', fam: 'grey',   src: "Davy's grey"},
+];
+// Генераторы заданий. Чистые функции — их проверяет palitra.test.js.
+
+function hexToLab(hex) {
+  const n = parseInt(hex, 16);
+  let rgb = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(v => {
+    v /= 255;
+    return v > 0.04045 ? Math.pow((v + 0.055) / 1.055, 2.4) : v / 12.92;
+  });
+  const [r, g, b] = rgb;
+  let x = (r * 0.4124 + g * 0.3576 + b * 0.1805) / 0.95047;
+  let y = (r * 0.2126 + g * 0.7152 + b * 0.0722);
+  let z = (r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883;
+  const f = t => t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116;
+  x = f(x); y = f(y); z = f(z);
+  return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
+}
+
+// Разница цветов CIE76. Ниже порога два варианта легко спутать на экране.
+function deltaE(h1, h2) {
+  const a = hexToLab(h1), b = hexToLab(h2);
+  return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+}
+const MIN_DELTA = 32;
+
+function shuffle(arr, rnd = Math.random) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Три «чужих» краски к загаданной: все заметно отличаются и от неё,
+// и друг от друга. Одну по возможности берём из той же семьи — так
+// интереснее, чем угадывать синий среди красных.
+function pickDistractors(target, paints, rnd = Math.random) {
+  const far = (p, chosen) => chosen.every(c => deltaE(c.hex, p.hex) >= MIN_DELTA);
+  const pool = shuffle(paints.filter(p => p !== target), rnd);
+  const chosen = [target];
+  const kin = pool.find(p => p.fam === target.fam && far(p, chosen));
+  if (kin) chosen.push(kin);
+  for (const p of pool) {
+    if (chosen.length === 4) break;
+    if (!chosen.includes(p) && far(p, chosen)) chosen.push(p);
+  }
+  return chosen.slice(1);
+}
+
+// Раунды 1 и 2: одна загаданная краска и четыре варианта.
+function makeChoice(kind, target, paints, rnd = Math.random) {
+  const options = shuffle([target, ...pickDistractors(target, paints, rnd)], rnd);
+  return {kind, target, options};
+}
+
+const ROUND3_FAMILIES = ['red', 'yellow', 'brown', 'green', 'blue'];
+
+// Раунд 3: восемь названий, отметить все из одной семьи. Лишние берутся
+// только из несоседних семей, чтобы не было спорных случаев.
+function makeFamily(fam, paints, neighbours, rnd = Math.random) {
+  const own = shuffle(paints.filter(p => p.fam === fam), rnd);
+  const k = 2 + Math.floor(rnd() * 3); // 2–4 правильных
+  const right = own.slice(0, Math.min(k, own.length));
+  const banned = new Set([fam, ...neighbours[fam]]);
+  const others = shuffle(paints.filter(p => !banned.has(p.fam)), rnd).slice(0, 8 - right.length);
+  return {kind: 'family', fam, options: shuffle([...right, ...others], rnd), right};
+}
+
+// Очередь без повторов, пока не кончится набор.
+function makeDeck(items, rnd = Math.random) {
+  let deck = [];
+  return () => {
+    if (!deck.length) deck = shuffle(items, rnd);
+    return deck.pop();
+  };
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = {hexToLab, deltaE, MIN_DELTA, shuffle, pickDistractors, makeChoice, makeFamily, makeDeck, ROUND3_FAMILIES};
+}
+// Экраны игры. Данные — data.js, задания — logic.js.
+
+const app = document.getElementById('app');
+const ROUNDS = [
+  {kind: 'byName',  title: 'Цвет по названию',  hint: 'Читаешь название — находишь краску в кювете', count: 10},
+  {kind: 'byColor', title: 'Название по цвету',  hint: 'Смотришь на краску — выбираешь её имя',       count: 10},
+  {kind: 'family',  title: 'Собери оттенки',     hint: 'Отмечаешь все краски одной семьи',           count: 6},
+];
+const ROUND_WELLS = ['E34234', '003153', '40826D']; // киноварь, берлинская лазурь, виридиан
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const paint = hex => `<i class="paint" style="--c:#${hex}"></i>`;
+
+let state = null;
+const paintDeck = makeDeck(PAINTS);
+const famDeck = makeDeck(ROUND3_FAMILIES);
+
+function nextTask(kind) {
+  if (kind === 'family') return makeFamily(famDeck(), PAINTS, NEIGHBOURS);
+  return makeChoice(kind, paintDeck(), PAINTS);
+}
+
+/* ---------- Меню ---------- */
+function menu() {
+  state = null;
+  app.innerHTML = `
+    <section class="palette">
+      <span class="label">Игра для художников</span>
+      <h1>Палитра</h1>
+      <p class="lede">Сепия, виридиан, краплак, церулеум… Узнаёшь ли ты краски по имени и в лицо?</p>
+    </section>
+    <section class="palette">
+      <h2>Три раунда подряд</h2>
+      <div class="menu">
+        <button class="mitem" id="go-quest">
+          <span class="well"><i style="background:conic-gradient(#${ROUND_WELLS[0]} 0 33%, #${ROUND_WELLS[1]} 0 66%, #${ROUND_WELLS[2]} 0)"></i></span>
+          <span><b>Путь через палитру</b><span>${ROUNDS.map(r => r.title.toLowerCase()).join(' → ')}</span></span>
+        </button>
+      </div>
+      <h2>Тренировка</h2>
+      <div class="menu">
+        ${ROUNDS.map((r, i) => `
+        <button class="mitem" data-train="${i}">
+          <span class="well"><i style="background:#${ROUND_WELLS[i]}"></i></span>
+          <span><b>${r.title}</b><span>${r.hint}</span></span>
+        </button>`).join('')}
+        <button class="mitem" id="go-chart">
+          <span class="well"><i style="background:conic-gradient(${PAINTS.filter((_, i) => i % 4 === 0).map(p => '#' + p.hex).join(',')})"></i></span>
+          <span><b>Все краски</b><span>${PAINTS.length} красок по семьям оттенков</span></span>
+        </button>
+      </div>
+    </section>`;
+  app.querySelector('#go-quest').onclick = startQuest;
+  app.querySelector('#go-chart').onclick = chart;
+  app.querySelectorAll('[data-train]').forEach(b => b.onclick = () => startTrain(+b.dataset.train));
+}
+
+/* ---------- Режимы ---------- */
+function startQuest() {
+  state = {mode: 'quest', round: 0, step: 0, marks: [], scores: [0, 0, 0]};
+  play();
+}
+function startTrain(i) {
+  state = {mode: 'train', round: i, right: 0, total: 0};
+  play();
+}
+
+function header() {
+  const r = ROUNDS[state.round];
+  const tally = state.mode === 'quest'
+    ? `Раунд ${state.round + 1} из 3`
+    : `${state.right} из ${state.total}`;
+  const road = state.mode === 'quest'
+    ? `<div class="road">${Array.from({length: r.count}, (_, i) =>
+        `<i class="${i < state.marks.length ? (state.marks[i] ? 'done' : 'miss') : ''}"></i>`).join('')}</div>`
+    : '';
+  return `<div class="top"><button class="back" id="back">← В меню</button><span class="tally">${tally}</span></div>${road}`;
+}
+
+function play() {
+  const r = ROUNDS[state.round];
+  const task = nextTask(r.kind);
+  state.task = task;
+  if (task.kind === 'byName') renderByName(task);
+  else if (task.kind === 'byColor') renderByColor(task);
+  else renderFamily(task);
+  app.querySelector('#back').onclick = menu;
+}
+
+function shell(inner) {
+  app.innerHTML = `${header()}<section class="palette">${inner}
+    <p class="verdict" id="verdict" aria-live="polite"></p>
+    <button class="btn" id="next" hidden>Дальше</button></section>`;
+  app.querySelector('#next').onclick = advance;
+}
+
+/* Раунд 1: название → краска */
+function renderByName(t) {
+  shell(`<p class="ask"><small>Найди в кювете</small>${esc(t.target.name)}</p>
+    <div class="tray">${t.options.map((p, i) =>
+      `<button class="pan" data-i="${i}" aria-label="Вариант ${i + 1}">${paint(p.hex)}</button>`).join('')}</div>`);
+  app.querySelectorAll('.pan').forEach(b => b.onclick = () => {
+    if (state.answered) return;
+    const pick = t.options[+b.dataset.i];
+    const ok = pick === t.target;
+    app.querySelectorAll('.pan').forEach((el, i) => {
+      const p = t.options[i];
+      el.insertAdjacentHTML('beforeend', `<span class="tag">${esc(p.name)}</span>`);
+      if (p === t.target) el.classList.add('right');
+      else if (el === b) el.classList.add('wrong');
+    });
+    finish(ok, ok ? 'Верно!' : `Это ${pick.name}. А ${t.target.name} — в зелёной рамке.`);
+  });
+}
+
+/* Раунд 2: краска → название */
+function renderByColor(t) {
+  shell(`<p class="ask"><small>Как называется эта краска?</small></p>
+    <div class="big">${paint(t.target.hex)}</div>
+    <div class="names">${t.options.map((p, i) =>
+      `<button class="name" data-i="${i}">${esc(p.name)}</button>`).join('')}</div>`);
+  app.querySelectorAll('.name').forEach(b => b.onclick = () => {
+    if (state.answered) return;
+    const pick = t.options[+b.dataset.i];
+    const ok = pick === t.target;
+    app.querySelectorAll('.name').forEach((el, i) => {
+      const p = t.options[i];
+      el.insertAdjacentHTML('afterbegin', `<span class="dot" style="--c:#${p.hex}"></span>`);
+      if (p === t.target) el.classList.add('right');
+      else if (el === b) el.classList.add('wrong');
+    });
+    finish(ok, ok ? 'Верно!' : `Это ${t.target.name}.`);
+  });
+}
+
+/* Раунд 3: отметить всю семью */
+function renderFamily(t) {
+  const f = FAMILIES[t.fam];
+  shell(`<p class="ask"><small>Отметь все оттенки ${f.name}</small>Какие из них — ${f.title.toLowerCase()}?</p>
+    <div class="names">${t.options.map((p, i) =>
+      `<button class="name" data-i="${i}" aria-pressed="false">${esc(p.name)}</button>`).join('')}</div>
+    <button class="btn ghost" id="check" disabled>Проверить</button>`);
+  const picked = new Set();
+  const check = app.querySelector('#check');
+  app.querySelectorAll('.name').forEach(b => b.onclick = () => {
+    if (state.answered) return;
+    const i = +b.dataset.i;
+    picked.has(i) ? picked.delete(i) : picked.add(i);
+    b.classList.toggle('on', picked.has(i));
+    b.setAttribute('aria-pressed', picked.has(i));
+    check.disabled = picked.size === 0;
+  });
+  check.onclick = () => {
+    if (state.answered) return;
+    let ok = true;
+    app.querySelectorAll('.name').forEach((el, i) => {
+      const p = t.options[i];
+      const isRight = t.right.includes(p);
+      el.classList.remove('on');
+      el.insertAdjacentHTML('afterbegin', `<span class="dot" style="--c:#${p.hex}"></span>`);
+      if (isRight && picked.has(i)) el.classList.add('right');
+      else if (isRight) { el.classList.add('missed'); ok = false; }
+      else if (picked.has(i)) { el.classList.add('wrong'); ok = false; }
+    });
+    check.hidden = true;
+    finish(ok, ok ? 'Все нашлись!' : `${f.title}: ${t.right.map(p => p.name).join(', ')}.`);
+  };
+}
+
+function finish(ok, text) {
+  state.answered = true;
+  const v = app.querySelector('#verdict');
+  v.textContent = text;
+  v.className = 'verdict ' + (ok ? 'ok' : 'bad');
+  if (state.mode === 'quest') {
+    state.marks.push(ok);
+    if (ok) state.scores[state.round]++;
+    app.querySelectorAll('.road i')[state.marks.length - 1].className = ok ? 'done' : 'miss';
+  } else {
+    state.total++;
+    if (ok) state.right++;
+    app.querySelector('.tally').textContent = `${state.right} из ${state.total}`;
+  }
+  const next = app.querySelector('#next');
+  next.hidden = false;
+  next.focus({preventScroll: true});
+}
+
+function advance() {
+  state.answered = false;
+  if (state.mode === 'quest' && state.marks.length === ROUNDS[state.round].count) {
+    if (state.round === ROUNDS.length - 1) return final();
+    return between();
+  }
+  play();
+}
+
+function between() {
+  const done = ROUNDS[state.round];
+  const got = state.scores[state.round];
+  const nr = ROUNDS[state.round + 1];
+  app.innerHTML = `<section class="palette">
+    <span class="label">Раунд ${state.round + 1} пройден</span>
+    <h2>${done.title}: ${got} из ${done.count}</h2>
+    <p class="lede">Дальше — «${nr.title}». ${nr.hint}.</p>
+    <button class="btn" id="go">Начать раунд ${state.round + 2}</button>
+  </section>`;
+  app.querySelector('#go').onclick = () => {
+    state.round++; state.marks = []; play();
+  };
+}
+
+function final() {
+  const sum = state.scores.reduce((a, b) => a + b, 0);
+  const max = ROUNDS.reduce((a, r) => a + r.count, 0);
+  const share = sum / max;
+  const word = share >= .9 ? 'Глаз настоящего колориста.' : share >= .6 ? 'Хорошая насмотренность.' : 'Палитра ещё раскрывается — загляни в «Все краски».';
+  app.innerHTML = `<section class="palette">
+    <span class="label">Путь пройден</span>
+    <h1>${sum} из ${max}</h1>
+    <p class="lede">${word}</p>
+    <div class="result">${ROUNDS.map((r, i) => `<div><span>${r.title}</span><b>${state.scores[i]} из ${r.count}</b></div>`).join('')}</div>
+    <button class="btn" id="again">Ещё раз</button>
+    <button class="btn ghost" id="home">В меню</button>
+  </section>`;
+  app.querySelector('#again').onclick = startQuest;
+  app.querySelector('#home').onclick = menu;
+}
+
+/* ---------- Справочник ---------- */
+function chart() {
+  state = null;
+  const fams = Object.keys(FAMILIES);
+  app.innerHTML = `<div class="top"><button class="back" id="back">← В меню</button><span class="tally">${PAINTS.length} красок</span></div>
+    <section class="palette">
+      <h2>Все краски</h2>
+      ${fams.map(f => `<div class="fam"><h3>${FAMILIES[f].title}</h3><div class="chart">
+        ${PAINTS.filter(p => p.fam === f).map(p => `<div class="chip"><div class="pan">${paint(p.hex)}</div><span>${esc(p.name)}</span></div>`).join('')}
+      </div></div>`).join('')}
+      <p class="note">Оттенки взяты из справочных таблиц цветов Википедии и показаны приблизительно: у настоящей краски тон зависит от производителя и разбавления.</p>
+    </section>`;
+  app.querySelector('#back').onclick = menu;
+}
+
+menu();
+</script>
