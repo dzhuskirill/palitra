@@ -41,9 +41,9 @@
     font-family:var(--body);
     font-size:17px; line-height:1.5;
     -webkit-font-smoothing:antialiased;
+    /* Светлый фон с лёгким зерном, без досок и полосок (просьба Алины 1.11). */
     background:
-      repeating-linear-gradient(to bottom, transparent 0 118px, var(--wood-seam) 118px 120px),
-      repeating-linear-gradient(97deg, var(--wood-grain) 0 1px, transparent 1px 7px, var(--wood-grain) 7px 8px, transparent 8px 23px),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url%28%23g%29' opacity='.09'/%3E%3C/svg%3E") 0 0 / 220px 220px,
       var(--wood);
   }
   .wrap{max-width:560px; margin:0 auto; padding-block:22px 48px;
@@ -158,11 +158,15 @@
   .chart{display:grid; grid-template-columns:repeat(auto-fill, minmax(min(140px, 100%), 1fr)); gap:10px;}
   .chip{display:flex; flex-direction:column; gap:6px;}
   .chip{font:inherit; color:var(--ink); background:none; border:0; padding:0; text-align:left; cursor:pointer;}
-  .chip .pan{display:block; aspect-ratio:3/2; cursor:pointer;}
-  .chip .cn{font:500 15px/1.25 var(--sans);}
+  /* Высота через padding, а не aspect-ratio: в Safari на айфоне пустой span внутри
+     кнопки с aspect-ratio схлопывался в ноль — плашки пропадали (правка 1.11). */
+  .chip .pan{display:block; width:100%; height:0; padding-bottom:75%; aspect-ratio:auto; cursor:pointer;}
+  /* Название на самой кювете, как в раундах 1–2 (просьба Алины 1.11). */
+  .chip .pan .tag{display:block; text-align:center;}
 
   /* История названия: под ответом и в карточке справочника */
   .about{margin:0; font:15px/1.5 var(--sans); color:var(--ink); text-wrap:pretty;}
+  .about .aka{display:block; margin-bottom:6px; color:var(--muted); font-style:italic;}
   .about .src{display:block; margin-top:4px; font-size:13px; color:var(--muted);}
   .about a{color:var(--accent);}
 
@@ -191,6 +195,9 @@
 // (src — название статьи). Цвет на экране приблизительный: у настоящей
 // краски тон зависит от производителя и разбавления.
 // fam — семья оттенков для третьего раунда.
+// alt — другие распространённые названия: в раундах краска выпадает и под ними.
+// old — исторические названия: только в карточке и в ответе, в раунды не идут.
+// altWiki — источник для alt/old, если его нет в about.js. Согласовано с Алиной 1.11.
 //  — мягкий перенос: длинные слова не влезают в кнопку на телефоне.
 const FAMILIES = {
   red:    {name: 'красного',          title: 'Красные'},
@@ -217,12 +224,12 @@ const NEIGHBOURS = {
 
 const PAINTS = [
   // Красные
-  {name: 'Киноварь',              hex: 'E34234', fam: 'red',    src: 'Vermilion'},
+  {name: 'Киноварь',              hex: 'E34234', fam: 'red',    src: 'Vermilion', alt: ['Вермильон', 'Китайский красный'], old: ['Цинобер'], altWiki: ['ru:Киноварь (краска)']},
   {name: 'Кармин',                hex: '960018', fam: 'red',    src: 'Carmine (color)'},
   {name: 'Краплак',               hex: 'E32636', fam: 'red',    src: 'Rose madder'},
   {name: 'Ализарин',              hex: 'DB2D43', fam: 'red',    src: 'Alizarin (List of colors)'},
   {name: 'Кадмий красный',        hex: 'E30022', fam: 'red',    src: 'Cadmium pigments'},
-  {name: 'Венецианская красная',  hex: 'C80815', fam: 'red',    src: 'Venetian red'},
+  {name: 'Венецианская красная',  hex: 'C80815', fam: 'red',    src: 'Venetian red', old: ['Синопия']},
   {name: 'Красная охра',          hex: '913831', fam: 'red',    src: 'Red ochre'},
   {name: 'Индийская красная',     hex: 'CD5C5C', fam: 'red',    src: 'Indian red (color)'},
   // Жёлтые и оранжевые
@@ -231,7 +238,7 @@ const PAINTS = [
   {name: 'Лимонная жёлтая',       hex: 'FFF44F', fam: 'yellow', src: 'Lemon (color)#Lemon yellow'},
   {name: 'Неаполитанская жёлтая', hex: 'FADA5E', fam: 'yellow', src: 'Naples yellow'},
   {name: 'Индийская жёлтая',      hex: 'E3A857', fam: 'yellow', src: 'Indian yellow'},
-  {name: 'Гуммигут',              hex: 'E49B0F', fam: 'yellow', src: 'Gamboge'},
+  {name: 'Гуммигут',              hex: 'E49B0F', fam: 'yellow', src: 'Gamboge', alt: ['Гамбоджа'], altWiki: ['ru:Гуммигут']},
   {name: 'Охра',                  hex: 'CC7722', fam: 'yellow', src: 'Ochre'},
   // Коричневые
   {name: 'Сепия',                 hex: '704214', fam: 'brown',  src: 'Sepia (color)'},
@@ -239,11 +246,11 @@ const PAINTS = [
   {name: 'Умбра жжёная',          hex: '8A3324', fam: 'brown',  src: 'Burnt umber'},
   {name: 'Сиена натуральная',     hex: 'D68A59', fam: 'brown',  src: 'Raw sienna (List of colors)'},
   {name: 'Сиена жжёная',          hex: 'E97451', fam: 'brown',  src: 'Burnt sienna'},
-  {name: 'Ван-Дик коричневый',    hex: '664228', fam: 'brown',  src: 'Van Dyke brown', proper: true},
+  {name: 'Ван-Дик коричневый',    hex: '664228', fam: 'brown',  src: 'Van Dyke brown', proper: true, alt: ['Кассельская земля'], old: ['Кёльнская земля']},
   {name: 'Бистр',                 hex: '3D2B1F', fam: 'brown',  src: 'Bistre'},
   // Зелёные
-  {name: 'Виридиан',              hex: '40826D', fam: 'green',  src: 'Viridian'},
-  {name: 'Парижская зелень',      hex: '50C878', fam: 'green',  src: 'Paris green'},
+  {name: 'Виридиан',              hex: '40826D', fam: 'green',  src: 'Viridian', alt: ['Изумрудная зелень'], altWiki: ['ru:Виридиан']},
+  {name: 'Парижская зелень',      hex: '50C878', fam: 'green',  src: 'Paris green', alt: ['Швейнфуртская зелень'], altWiki: ['ru:Швейнфуртская зелень']},
   {name: 'Сап-грин',              hex: '507D2A', fam: 'green',  src: 'Shades of green#Sap green'},
   {name: 'Зелёная Хукера',        hex: '49796B', fam: 'green',  src: "Shades of green#Hooker's green"},
   {name: 'Фталоцианиновая зелёная', hex: '123524', fam: 'green', src: 'Phthalocyanine Green G'},
@@ -252,14 +259,14 @@ const PAINTS = [
   {name: 'Малахитовая зелень',    hex: '0BDA51', fam: 'green',  src: 'Shades of green#Malachite'},
   // Синие
   {name: 'Ультрамарин',           hex: '120A8F', fam: 'blue',   src: 'Ultramarine'},
-  {name: 'Кобальт синий',         hex: '0047AB', fam: 'blue',   src: 'Cobalt blue'},
+  {name: 'Кобальт синий',         hex: '0047AB', fam: 'blue',   src: 'Cobalt blue', alt: ['Кобальтовая синь', 'Тенарова синь'], altWiki: ['ru:Кобальтовая синь']},
   {name: 'Церулеум',              hex: '007BA7', fam: 'blue',   src: 'Cerulean'},
-  {name: 'Берлинская лазурь',     hex: '003153', fam: 'blue',   src: 'Prussian blue'},
+  {name: 'Берлинская лазурь',     hex: '003153', fam: 'blue',   src: 'Prussian blue', alt: ['Прусская синь', 'Милори'], old: ['Парижская лазурь', 'Железная лазурь']},
   {name: 'Индиго',                hex: '00416A', fam: 'blue',   src: 'Indigo (color)#Indigo dye'},
   {name: 'Фталоцианиновая синяя', hex: '000F89', fam: 'blue',   src: 'Phthalocyanine Blue BN'},
   {name: 'Ляпис-лазурь',          hex: '26619C', fam: 'blue',   src: 'Shades of azure#Lapis lazuli'},
   // Пурпурные
-  {name: 'Пурпур',                hex: '66023C', fam: 'purple', src: 'Tyrian purple'},
+  {name: 'Пурпур',                hex: '66023C', fam: 'purple', src: 'Tyrian purple', old: ['Тирский пурпур', 'Порфира'], altWiki: ['ru:Тирский пурпур']},
   {name: 'Хинакридон пурпурный',  hex: '8E3A59', fam: 'purple', src: 'Shades of magenta#Quinacridone magenta'},
   // Серые
   {name: 'Серая Пейна',           hex: '536878', fam: 'grey',   src: "Payne's grey"},
@@ -268,20 +275,22 @@ const PAINTS = [
 // Откуда название — для строки ответа и справочника «Все краски».
 // Только то, что подтверждено статьёй-источником (wiki: en или ru Википедия).
 // Ключ — название краски из data.js.
+// lead — вариант текста после «Название —» в строке ответа (раунды 1–2),
+// если просто строчная первая буква читается плохо.
 const ABOUT = {
   'Киноварь': {text: 'От греческого «киннабари» — так называли красный минерал сульфид ртути. Европейское vermilion — от латинского vermiculus, «червячок».', wiki: ['ru:Киноварь', 'en:Vermilion']},
   'Кармин': {text: 'От персидского «кирмиз» — так называли кошениль, насекомых, из которых добывают краску, — и латинского minium, «киноварь».', wiki: ['ru:Кармин']},
   'Краплак': {text: 'От немецкого Krapp — марена: краску делали из корня этого растения.', wiki: ['ru:Крапп', 'en:Rose madder']},
   'Ализарин': {text: 'Главное красящее вещество корня марены. Корень из Леванта продавали под названием «ализари». В 1868 году немецкие химики научились получать ализарин искусственно.', wiki: ['ru:Крапп', 'en:Alizarin']},
-  'Кадмий красный': {text: 'Металл кадмий назвали по греческому имени цинковой руды «кадмейя», а руду — в честь Кадма, героя греческих мифов.', wiki: ['ru:Кадмий', 'en:Cadmium']},
+  'Кадмий красный': {lead: 'краска на основе металла кадмия. Его назвали по греческому имени цинковой руды «кадмейя», а руду — в честь Кадма, героя греческих мифов.', text: 'Металл кадмий назвали по греческому имени цинковой руды «кадмейя», а руду — в честь Кадма, героя греческих мифов.', wiki: ['ru:Кадмий', 'en:Cadmium']},
   'Венецианская красная': {text: 'Природный оксид железа из красного гематита. Раньше её звали «синопия»: лучшая краска шла из порта Синоп на севере Турции.', wiki: ['en:Venetian red']},
-  'Красная охра': {text: 'Охра — от греческого «охрос», «бледный, изжелта-бледный». В Древней Греции красную охру называли «мильтос».', wiki: ['en:Ochre', 'ru:Охра']},
-  'Индийская красная': {text: 'Названа так, потому что сначала её привозили из Индии, где много красной железистой почвы.', wiki: ['en:Indian red (color)']},
-  'Кадмий жёлтый': {text: 'Кадмий открыл немецкий химик Фридрих Штромейер в 1817 году как примесь в цинковой руде. Название — от греческого имени этой руды, «кадмейя».', wiki: ['ru:Кадмий', 'en:Cadmium']},
-  'Кадмий оранжевый': {text: 'Кадмий назван по цинковой руде «кадмейя», а руда — в честь Кадма, основателя Фив из греческих мифов.', wiki: ['ru:Кадмий', 'en:Cadmium']},
+  'Красная охра': {lead: 'слово «охра» пришло от греческого «охрос», «бледный, изжелта-бледный». В Древней Греции красную охру называли «мильтос».', text: 'Охра — от греческого «охрос», «бледный, изжелта-бледный». В Древней Греции красную охру называли «мильтос».', wiki: ['en:Ochre', 'ru:Охра']},
+  'Индийская красная': {lead: 'сначала её привозили из Индии, где много красной железистой почвы, — отсюда и название.', text: 'Названа так, потому что сначала её привозили из Индии, где много красной железистой почвы.', wiki: ['en:Indian red (color)']},
+  'Кадмий жёлтый': {lead: 'краска на основе кадмия. Этот металл открыл немецкий химик Фридрих Штромейер в 1817 году как примесь в цинковой руде. Название — от греческого имени этой руды, «кадмейя».', text: 'Кадмий открыл немецкий химик Фридрих Штромейер в 1817 году как примесь в цинковой руде. Название — от греческого имени этой руды, «кадмейя».', wiki: ['ru:Кадмий', 'en:Cadmium']},
+  'Кадмий оранжевый': {lead: 'краска на основе кадмия. Металл назван по цинковой руде «кадмейя», а руда — в честь Кадма, основателя Фив из греческих мифов.', text: 'Кадмий назван по цинковой руде «кадмейя», а руда — в честь Кадма, основателя Фив из греческих мифов.', wiki: ['ru:Кадмий', 'en:Cadmium']},
   'Лимонная жёлтая': {text: 'Названа по цвету лимона. Как имя цвета «лимонный» в английском известен с 1598 года.', wiki: ['en:Lemon (color)']},
   'Неаполитанская жёлтая': {text: 'Названа по Неаполю. Впервые «неаполитанской» её назвал в трактате конца XVII века Андреа Поццо: luteolum napolitanum.', wiki: ['en:Naples yellow']},
-  'Индийская жёлтая': {text: 'Её делали в Индии из мочи коров, которых кормили листьями манго. Сырьё сушили в пахучие жёлтые шарики «пурри».', wiki: ['en:Indian yellow']},
+  'Индийская жёлтая': {lead: 'краску делали в Индии из мочи коров, которых кормили листьями манго. Сырьё сушили в пахучие жёлтые шарики «пурри».', text: 'Её делали в Индии из мочи коров, которых кормили листьями манго. Сырьё сушили в пахучие жёлтые шарики «пурри».', wiki: ['en:Indian yellow']},
   'Гуммигут': {text: 'Смола тропического дерева. Название — от старого имени Камбоджи, Camboja; в европейских руководствах XVII века её звали gama gitta.', wiki: ['en:Gamboge']},
   'Охра': {text: 'От греческого «охрос» — «изжелта-бледный». Это природная глина с оксидом железа, одна из древнейших красок.', wiki: ['ru:Охра', 'en:Ochre']},
   'Сепия': {text: 'От греческого «сепия» — каракатица. Краску делали из чернильного мешка каракатицы.', wiki: ['ru:Сепия', 'en:Sepia (color)']},
@@ -289,13 +298,13 @@ const ABOUT = {
   'Умбра жжёная': {text: 'Та же умбра — от Умбрии или от латинского umbra, «тень», — но прокалённая: от нагрева она становится теплее и краснее.', wiki: ['ru:Умбра', 'en:Umber']},
   'Сиена натуральная': {text: 'От итальянского terra di Siena — «сиенская земля»: в эпоху Возрождения её добывали у города Сиена.', wiki: ['ru:Сиена (пигмент)', 'en:Sienna']},
   'Сиена жжёная': {text: 'Та же «сиенская земля», только прокалённая: при нагреве жёлто-коричневая сиена становится красно-коричневой.', wiki: ['en:Sienna']},
-  'Ван-Дик коричневый': {text: 'Названа в честь фламандского живописца Антониса ван Дейка. При этом в его картинах эту краску анализы так и не нашли.', wiki: ['en:Van Dyke brown']},
+  'Ван-Дик коричневый': {lead: 'назван в честь фламандского живописца Антониса ван Дейка. При этом в его картинах эту краску анализы так и не нашли.', text: 'Названа в честь фламандского живописца Антониса ван Дейка. При этом в его картинах эту краску анализы так и не нашли.', wiki: ['en:Van Dyke brown']},
   'Бистр': {text: 'Краска из сажи: жгли буковые дрова, сажу вываривали в воде. Бистром рисовали размывкой старые мастера.', wiki: ['en:Bistre', 'ru:Бистр']},
   'Виридиан': {text: 'От латинского viridis — «зелёный». Как имя цвета в английском известен с 1860-х годов.', wiki: ['en:Viridian']},
   'Парижская зелень': {text: 'Придумана в 1814 году в немецком Швайнфурте, поэтому её ещё зовут швейнфуртской зеленью. В ней мышьяк — краска очень ядовита.', wiki: ['en:Paris green']},
   'Сап-грин': {text: 'По-английски sap green — «зелень из сока»: раньше её делали из спелых ягод крушины с квасцами.', wiki: ['en:Shades of green']},
   'Зелёная Хукера': {text: 'Названа в честь ботанического художника Уильяма Хукера: он смешал берлинскую лазурь с гуммигутом, чтобы рисовать листья.', wiki: ['en:Shades of green']},
-  'Фталоцианиновая зелёная': {text: 'Её получают из фталоцианиновой синей: к синему пигменту присоединяют хлор, и он становится зелёным.', wiki: ['en:Phthalocyanine Green G']},
+  'Фталоцианиновая зелёная': {lead: 'получается из фталоцианиновой синей: к синему пигменту присоединяют хлор, и он становится зелёным.', text: 'Её получают из фталоцианиновой синей: к синему пигменту присоединяют хлор, и он становится зелёным.', wiki: ['en:Phthalocyanine Green G']},
   'Кадмий зелёный': {text: 'Это смесь кадмия жёлтого с виридианом. Сам кадмий назван по греческому имени цинковой руды, «кадмейя».', wiki: ['en:Cadmium pigments', 'ru:Кадмий']},
   'Ярь-медянка': {text: 'По-французски vert-de-Grèce, «греческая зелень»: краску везли из Греции. По другой версии — vert d’aigre, «зелень из уксуса».', wiki: ['en:Verdigris']},
   'Малахитовая зелень': {text: 'От греческого «малахе» — мальва: камень назвали «мальвово-зелёным».', wiki: ['en:Malachite', 'ru:Малахит']},
@@ -306,7 +315,7 @@ const ABOUT = {
   'Индиго': {text: 'От греческого «индикон» — «индийский»: краску везли из Индии. Римляне превратили слово в indicum.', wiki: ['en:Indigo dye']},
   'Фталоцианиновая синяя': {text: 'Синтетический пигмент на основе меди. Сегодня это самый массовый пигмент в мире, холодный синий с уходом в зелень.', wiki: ['en:Copper phthalocyanine']},
   'Ляпис-лазурь': {text: 'Средневековое «лазурный камень»: lapis по-латыни «камень», а «лазурь» — от персидского «лажвард», синий камень.', wiki: ['ru:Лазурит', 'en:Lapis lazuli']},
-  'Пурпур': {text: 'Тирский пурпур — по городу Тир в древней Финикии. Его добывали из морских улиток, десятки тысяч на одну покраску.', wiki: ['en:Tyrian purple']},
+  'Пурпур': {lead: 'точнее, тирский пурпур — по городу Тир в древней Финикии. Его добывали из морских улиток, десятки тысяч на одну покраску.', text: 'Тирский пурпур — по городу Тир в древней Финикии. Его добывали из морских улиток, десятки тысяч на одну покраску.', wiki: ['en:Tyrian purple']},
   'Хинакридон пурпурный': {text: 'Название показывает строение молекулы: «хинолин» плюс «акридон». Продавать хинакридоны начала компания DuPont в 1958 году.', wiki: ['en:Quinacridone']},
   'Серая Пейна': {text: 'Названа в честь акварелиста Уильяма Пейна: в конце XVIII века он искал смесь мягче, чем чёрная.', wiki: ["en:Payne's grey"]},
   'Серая Дэви': {text: 'Названа в честь Генри Дэви. Её делали из молотого сланца, оксида железа и сажи.', wiki: ['en:Shades of gray']},
@@ -420,7 +429,13 @@ const paint = hex => {
 const nameHTML = s => esc(s).replace(/\S+-\S+/g, w => `<span class="nb">${w}</span>`);
 
 // Название краски в строке ответа: со строчной, кроме начинающихся с фамилии.
-const pn = p => `<span class="pn">${nameHTML(p.proper ? p.name : p.name[0].toLowerCase() + p.name.slice(1))}</span>`;
+// name — под каким именем краска показана в задании (основное или из alt).
+const low = (p, name) => p.proper && name === p.name ? name : name[0].toLowerCase() + name.slice(1);
+const pn = (p, name = p.name) => `<span class="pn">${nameHTML(low(p, name))}</span>`;
+// Под каким именем показать краску: в половине случаев — под одним из alt.
+const pickName = p => p.alt && Math.random() < .5 ? p.alt[Math.floor(Math.random() * p.alt.length)] : p.name;
+const allNames = p => [p.name, ...(p.alt || []), ...(p.old || [])];
+const nm = p => (state && state.task && state.task.names && state.task.names.get(p)) || p.name;
 
 const plural = (n, one, few, many) =>
   n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? few : many;
@@ -430,11 +445,21 @@ const wikiURL = w => {
   const [lang, title] = w.split(/:(.+)/);
   return `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))}`;
 };
-function aboutHTML(p) {
+// withName — для ответа в раундах 1–2: «<b>Индиго</b> — от греческого…».
+// shown — имя, под которым краска была в задании; остальные идут в скобках.
+function aboutHTML(p, withName, shown = p.name) {
   const a = ABOUT[p.name];
   if (!a) return '';
-  const links = a.wiki.map((w, i) => `<a href="${wikiURL(w)}" target="_blank" rel="noopener">${i ? 'ещё' : 'Википедия'}</a>`).join(', ');
-  return `<p class="about">${esc(a.text)} <span class="src">Источник: ${links}</span></p>`;
+  const wiki = [...a.wiki, ...(p.altWiki || []).filter(w => !a.wiki.includes(w))];
+  const links = wiki.map((w, i) => `<a href="${wikiURL(w)}" target="_blank" rel="noopener">${i ? 'ещё' : 'Википедия'}</a>`).join(', ');
+  const others = allNames(p).filter(n => n !== shown).map(n => esc(low(p, n)));
+  const body = withName
+    ? `<b>${esc(shown)}</b>${others.length ? ` (${others.join(', ')})` : ''} — ${esc(a.lead || a.text[0].toLowerCase() + a.text.slice(1))}`
+    : esc(a.text);
+  const aka = !withName && (p.alt || p.old)
+    ? `<span class="aka">${[p.alt && `Ещё называют: ${p.alt.map(n => esc(low(p, n))).join(', ')}.`,
+        p.old && `Раньше: ${p.old.map(n => esc(low(p, n))).join(', ')}.`].filter(Boolean).join(' ')}</span>` : '';
+  return `<p class="about">${aka}${body} <span class="src">Источник: ${links}</span></p>`;
 }
 
 // Длинное слово целиком: если не влезает в кнопку, уменьшаем кегль.
@@ -549,6 +574,7 @@ function header() {
 function play() {
   const r = ROUNDS[state.round];
   const task = nextTask(r.kind);
+  task.names = new Map(task.options.map(p => [p, pickName(p)]));
   state.task = task;
   if (task.kind === 'byName') renderByName(task);
   else if (task.kind === 'byColor') renderByColor(task);
@@ -567,7 +593,7 @@ function shell(inner) {
 
 /* Раунд 1: название → краска */
 function renderByName(t) {
-  shell(`<p class="ask"><small>Найди в кювете</small>${nameHTML(t.target.name)}</p>
+  shell(`<p class="ask"><small>Найди в кювете</small>${nameHTML(nm(t.target))}</p>
     <div class="tray">${t.options.map((p, i) =>
       `<button class="pan" data-i="${i}" aria-label="Вариант ${i + 1}">${paint(p.hex)}</button>`).join('')}</div>`);
   app.querySelectorAll('.pan').forEach(b => b.onclick = () => {
@@ -576,12 +602,12 @@ function renderByName(t) {
     const ok = pick === t.target;
     app.querySelectorAll('.pan').forEach((el, i) => {
       const p = t.options[i];
-      el.insertAdjacentHTML('beforeend', `<span class="tag">${nameHTML(p.name)}</span>`);
+      el.insertAdjacentHTML('beforeend', `<span class="tag">${nameHTML(nm(p))}</span>`);
       if (p === t.target) el.classList.add('right');
       else if (el === b) el.classList.add('wrong');
     });
-    finish(ok, ok ? 'Верно!' : `Это ${pn(pick)}. А ${pn(t.target)} — в зелёной рамке.`);
-    app.querySelector('#about').innerHTML = aboutHTML(t.target);
+    finish(ok, ok ? 'Верно!' : 'Неверно.');
+    app.querySelector('#about').innerHTML = aboutHTML(t.target, true, nm(t.target));
   });
 }
 
@@ -590,7 +616,7 @@ function renderByColor(t) {
   shell(`<p class="ask"><small>Как называется эта краска?</small></p>
     <div class="big">${paint(t.target.hex)}</div>
     <div class="names">${t.options.map((p, i) =>
-      `<button class="name" data-i="${i}"><span class="dot"></span><span class="nm">${nameHTML(p.name)}</span></button>`).join('')}</div>`);
+      `<button class="name" data-i="${i}"><span class="dot"></span><span class="nm">${nameHTML(nm(p))}</span></button>`).join('')}</div>`);
   app.querySelectorAll('.name').forEach(b => b.onclick = () => {
     if (state.answered) return;
     const pick = t.options[+b.dataset.i];
@@ -601,8 +627,8 @@ function renderByColor(t) {
       if (p === t.target) el.classList.add('right');
       else if (el === b) el.classList.add('wrong');
     });
-    finish(ok, ok ? 'Верно!' : `Это ${pn(t.target)}.`);
-    app.querySelector('#about').innerHTML = aboutHTML(t.target);
+    finish(ok, ok ? 'Верно!' : 'Неверно.');
+    app.querySelector('#about').innerHTML = aboutHTML(t.target, true, nm(t.target));
   });
 }
 
@@ -611,7 +637,7 @@ function renderFamily(t) {
   const f = FAMILIES[t.fam];
   shell(`<p class="ask"><small>Отметь все оттенки ${f.name}</small><span class="nb">Какие из них —</span><br>${f.title.toLowerCase()}?</p>
     <div class="names">${t.options.map((p, i) =>
-      `<button class="name" data-i="${i}" aria-pressed="false"><span class="dot"></span><span class="nm">${nameHTML(p.name)}</span></button>`).join('')}</div>
+      `<button class="name" data-i="${i}" aria-pressed="false"><span class="dot"></span><span class="nm">${nameHTML(nm(p))}</span></button>`).join('')}</div>
     <button class="btn ghost" id="check" disabled>Проверить</button>`);
   const picked = new Set();
   const check = app.querySelector('#check');
@@ -636,7 +662,7 @@ function renderFamily(t) {
       else if (picked.has(i)) { el.classList.add('wrong'); ok = false; }
     });
     check.hidden = true;
-    finish(ok, ok ? 'Все нашлись!' : `<b>${f.title}:</b> ${t.right.map(pn).join(', ')}.`);
+    finish(ok, ok ? 'Все нашлись!' : `<b>${f.title}:</b> ${t.right.map(p => pn(p, nm(p))).join(', ')}.`);
   };
 }
 
@@ -715,7 +741,7 @@ function chart() {
       <h2>Все краски</h2>
       <p class="note">Нажми на краску — расскажу, откуда у неё название.</p>
       ${fams.map(f => `<div class="fam"><h3>${FAMILIES[f].title}</h3><div class="chart">
-        ${PAINTS.filter(p => p.fam === f).map(p => `<button class="chip" data-name="${esc(p.name)}"><span class="pan">${paint(p.hex)}</span><span class="cn">${nameHTML(p.name)}</span></button>`).join('')}
+        ${PAINTS.filter(p => p.fam === f).map(p => `<button class="chip" data-name="${esc(p.name)}"><span class="pan">${paint(p.hex)}<span class="tag">${nameHTML(p.name)}</span></span></button>`).join('')}
       </div></div>`).join('')}
       <p class="note">Оттенки взяты из справочных таблиц цветов Википедии и показаны приблизительно: у настоящей краски тон зависит от производителя и разбавления.</p>
     </section>
@@ -736,6 +762,7 @@ function chart() {
   });
   app.querySelector('#sheet-x').onclick = () => { sheet.hidden = true; };
   app.querySelector('#back').onclick = menu;
+  fitText(app); // длинные названия на кюветах
 }
 
 menu();
